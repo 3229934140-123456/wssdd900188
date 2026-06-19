@@ -1,0 +1,179 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  padding: $spacing-lg;
+  padding-bottom: 120rpx;
+}
+
+.header {
+  margin-bottom: $spacing-lg;
+}
+
+.companyName {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+}
+
+.subtitle {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.summaryCard {
+  background: linear-gradient(135deg, #165dff 0%, #4080ff 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  margin-bottom: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.summaryTitle {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: $spacing-md;
+}
+
+.summaryStats {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: $spacing-lg;
+}
+
+.statItem {
+  flex: 1;
+  text-align: center;
+}
+
+.statNumber {
+  font-size: 48rpx;
+  font-weight: $font-weight-bold;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: $spacing-xs;
+}
+
+.statDivider {
+  width: 2rpx;
+  height: 60rpx;
+  background-color: rgba(255, 255, 255, 0.2);
+  align-self: center;
+}
+
+.summaryTip {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  display: flex;
+  align-items: center;
+}
+
+.tipIcon {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  background-color: #f53f3f;
+  margin-right: $spacing-sm;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tipIconInner {
+  width: 8rpx;
+  height: 16rpx;
+  background-color: #ffffff;
+  border-radius: 2rpx;
+}
+
+.tipText {
+  font-size: $font-size-sm;
+  color: #ffffff;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin: $spacing-lg 0 $spacing-md;
+}
+
+.cityList {
+  margin-top: $spacing-lg;
+}
+
+.cityCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+}
+
+.cityCard:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.cityCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.cityName {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.cityMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.discussionInfo {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.discussionCount {
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.updateTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.notesSection {
+  margin-top: $spacing-md;
+  padding-top: $spacing-md;
+  border-top: 2rpx solid $color-divider;
+}
+
+.notesLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xs;
+}
+
+.notesTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+}

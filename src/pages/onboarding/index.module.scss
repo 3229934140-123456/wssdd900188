@@ -1,0 +1,199 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background-color: $color-bg-page;
+  padding-bottom: 200rpx;
+}
+
+.navBar {
+  height: 88rpx;
+  padding-top: env(safe-area-inset-top);
+  display: flex;
+  align-items: center;
+  padding-left: $spacing-lg;
+  padding-right: $spacing-lg;
+}
+
+.navBack {
+  font-size: 48rpx;
+  color: $color-text-primary;
+  line-height: 1;
+}
+
+.hero {
+  padding: $spacing-2xl $spacing-xl $spacing-xl;
+  background: linear-gradient(135deg, #165dff 0%, #4080ff 100%);
+  padding-top: calc(#{$spacing-xl} + env(safe-area-inset-top));
+}
+
+.heroTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: #ffffff;
+  margin-bottom: $spacing-sm;
+}
+
+.heroDesc {
+  font-size: $font-size-md;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+}
+
+.form {
+  padding: $spacing-lg;
+  margin-top: -32rpx;
+}
+
+.formCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  box-shadow: $shadow-card;
+}
+
+.formItem {
+  margin-bottom: $spacing-xl;
+}
+
+.formItem:last-child {
+  margin-bottom: 0;
+}
+
+.formLabel {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.formLabelRequired {
+  color: #f53f3f;
+  margin-right: 4rpx;
+}
+
+.formHint {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-md;
+}
+
+.inputBox {
+  background-color: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-md $spacing-lg;
+  border: 2rpx solid transparent;
+  transition: all $transition-base;
+}
+
+.inputBoxActive {
+  border-color: $color-primary;
+  background-color: #ffffff;
+}
+
+.input {
+  width: 100%;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  height: 48rpx;
+}
+
+.textarea {
+  width: 100%;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  min-height: 100rpx;
+  line-height: 1.5;
+}
+
+.cityChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.cityChip {
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-button;
+  background-color: $color-bg-page;
+  border: 2rpx solid transparent;
+  transition: all $transition-base;
+}
+
+.cityChipSelected {
+  background-color: $color-tag-bg-blue;
+  border-color: $color-primary;
+}
+
+.cityChipText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.cityChipSelectedText {
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.selectedCities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.selectedCityTag {
+  display: flex;
+  align-items: center;
+  padding: $spacing-xs $spacing-sm;
+  background-color: $color-tag-bg-blue;
+  border-radius: $radius-round;
+}
+
+.selectedCityText {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+  margin-right: $spacing-xs;
+}
+
+.selectedCityClose {
+  font-size: $font-size-md;
+  color: $color-primary;
+  line-height: 1;
+}
+
+.bottomBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: $spacing-md $spacing-lg;
+  padding-bottom: calc(#{$spacing-lg} + env(safe-area-inset-bottom));
+  background-color: $color-bg-card;
+  box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+.submitBtn {
+  @include button-reset;
+  width: 100%;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, #165dff 0%, #4080ff 100%);
+  border-radius: $radius-button;
+  transition: all $transition-base;
+}
+
+.submitBtnDisabled {
+  background: #c9cdd4;
+}
+
+.submitBtn:active {
+  opacity: 0.9;
+  transform: scale(0.98);
+}
+
+.submitBtnText {
+  color: #ffffff;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+}

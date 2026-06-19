@@ -1,0 +1,4 @@
+export default definePageConfig({
+  navigationBarTitleText: '风险地图',
+  enablePullDownRefresh: true
+})

@@ -1,0 +1,417 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  padding: $spacing-lg;
+  padding-bottom: 200rpx;
+  background-color: $color-bg-page;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-lg;
+}
+
+.cityName {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+}
+
+.metaInfo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.metaItem {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.metaValue {
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.summaryCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.summaryTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-lg;
+}
+
+.summaryItem {
+  display: flex;
+  margin-bottom: $spacing-lg;
+}
+
+.summaryItem:last-child {
+  margin-bottom: 0;
+}
+
+.summaryIcon {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: $spacing-md;
+  flex-shrink: 0;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  color: #ffffff;
+}
+
+.summaryContent {
+  flex: 1;
+}
+
+.summaryLabel {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xs;
+}
+
+.summaryText {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  line-height: 1.6;
+}
+
+.sourcesCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.sourcesTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-lg;
+}
+
+.sourceItem {
+  padding: $spacing-md 0;
+  border-bottom: 2rpx solid $color-divider;
+  transition: opacity $transition-base;
+}
+
+.sourceItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.sourceItem:first-child {
+  padding-top: 0;
+}
+
+.sourceItem:active {
+  opacity: 0.7;
+}
+
+.sourceTitle {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  line-height: 1.5;
+  margin-bottom: $spacing-xs;
+}
+
+.sourceMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sourcePlatform {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  background-color: $color-tag-bg-blue;
+  padding: 4rpx 16rpx;
+  border-radius: $radius-xs;
+}
+
+.sourceAction {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.notesCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.notesHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-lg;
+}
+
+.notesTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.notesCount {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.noteItem {
+  padding: $spacing-md;
+  background-color: #f8faff;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+}
+
+.noteItem:last-child {
+  margin-bottom: 0;
+}
+
+.noteHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-xs;
+}
+
+.noteTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.noteDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.5;
+}
+
+.emptyNotes {
+  text-align: center;
+  padding: $spacing-xl 0;
+}
+
+.emptyText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.bottomBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: $spacing-md $spacing-lg;
+  padding-bottom: calc(#{$spacing-lg} + env(safe-area-inset-bottom));
+  background-color: $color-bg-card;
+  box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.08);
+  display: flex;
+  gap: $spacing-md;
+}
+
+.secondaryBtn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-lg;
+  background-color: $color-bg-hover;
+  border-radius: $radius-button;
+  transition: all $transition-base;
+}
+
+.secondaryBtn:active {
+  opacity: 0.9;
+  transform: scale(0.98);
+}
+
+.secondaryBtnText {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.primaryBtn {
+  @include button-reset;
+  flex: 1.5;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, #165dff 0%, #4080ff 100%);
+  border-radius: $radius-button;
+  transition: all $transition-base;
+}
+
+.primaryBtn:active {
+  opacity: 0.9;
+  transform: scale(0.98);
+}
+
+.primaryBtnText {
+  font-size: $font-size-md;
+  color: #ffffff;
+  font-weight: $font-weight-semibold;
+}
+
+.modalMask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+}
+
+.modalContent {
+  width: 100%;
+  background-color: $color-bg-card;
+  border-radius: $radius-xl $radius-xl 0 0;
+  padding: $spacing-xl $spacing-lg;
+  padding-bottom: calc(#{$spacing-xl} + env(safe-area-inset-bottom));
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-lg;
+}
+
+.modalTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.modalClose {
+  font-size: 48rpx;
+  color: $color-text-tertiary;
+  line-height: 1;
+}
+
+.statusOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+}
+
+.statusOption {
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-button;
+  border: 2rpx solid $color-border;
+  transition: all $transition-base;
+}
+
+.statusOptionActive {
+  border-color: $color-primary;
+  background-color: $color-tag-bg-blue;
+}
+
+.statusOptionText {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.statusOptionActiveText {
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.inputWrap {
+  background-color: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.input {
+  width: 100%;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  line-height: 1.5;
+  min-height: 160rpx;
+}
+
+.submitBtn {
+  @include button-reset;
+  width: 100%;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, #165dff 0%, #4080ff 100%);
+  border-radius: $radius-button;
+  transition: all $transition-base;
+}
+
+.submitBtn:active {
+  opacity: 0.9;
+  transform: scale(0.98);
+}
+
+.submitBtnText {
+  color: #ffffff;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+}
+
+.trendCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.trendTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-lg;
+}
+
+.trendBars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 200rpx;
+  padding: $spacing-md 0;
+}
+
+.trendBarItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+}
+
+.trendBar {
+  width: 40rpx;
+  border-radius: $radius-sm $radius-sm 0 0;
+  background: linear-gradient(180deg, #4080ff 0%, #165dff 100%);
+  margin-bottom: $spacing-sm;
+}
+
+.trendDay {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}

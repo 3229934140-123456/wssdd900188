@@ -1,0 +1,202 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  padding-bottom: 120rpx;
+}
+
+.header {
+  background: linear-gradient(135deg, #165dff 0%, #4080ff 100%);
+  padding: $spacing-xl $spacing-lg 80rpx;
+}
+
+.companyInfo {
+  display: flex;
+  align-items: center;
+}
+
+.companyLogo {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: $radius-md;
+  background-color: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: $spacing-md;
+}
+
+.companyLogoText {
+  color: #ffffff;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+}
+
+.companyDetail {
+  flex: 1;
+}
+
+.companyName {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: #ffffff;
+  margin-bottom: $spacing-xs;
+}
+
+.companyShort {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.content {
+  padding: 0 $spacing-lg;
+  margin-top: -48rpx;
+}
+
+.statsCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+  box-shadow: $shadow-card;
+  display: flex;
+  justify-content: space-around;
+}
+
+.statItem {
+  text-align: center;
+}
+
+.statNumber {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+}
+
+.sectionCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+  overflow: hidden;
+}
+
+.sectionTitle {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  padding: $spacing-md $spacing-lg $spacing-xs;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  padding: $spacing-lg;
+  border-bottom: 2rpx solid $color-divider;
+  transition: background-color $transition-base;
+}
+
+.menuItem:last-child {
+  border-bottom: none;
+}
+
+.menuItem:active {
+  background-color: $color-bg-hover;
+}
+
+.menuIcon {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: $radius-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: $spacing-md;
+  flex-shrink: 0;
+}
+
+.menuIconText {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: #ffffff;
+}
+
+.menuContent {
+  flex: 1;
+}
+
+.menuLabel {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.menuDesc {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+}
+
+.menuArrow {
+  font-size: $font-size-lg;
+  color: $color-text-disabled;
+}
+
+.cityList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  padding: 0 $spacing-lg $spacing-lg;
+}
+
+.cityTag {
+  padding: $spacing-xs $spacing-md;
+  background-color: $color-tag-bg-blue;
+  border-radius: $radius-round;
+}
+
+.cityTagText {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.notesList {
+  padding: 0 $spacing-sm $spacing-sm;
+}
+
+.noteItem {
+  padding: $spacing-md;
+  background-color: #f8faff;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+}
+
+.noteHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-xs;
+}
+
+.noteCity {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.noteTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.noteDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.5;
+}

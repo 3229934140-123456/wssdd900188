@@ -3,11 +3,13 @@
 .page {
   min-height: 100vh;
   padding-bottom: 120rpx;
+  background-color: $color-bg-page;
 }
 
 .header {
   background: linear-gradient(135deg, #165dff 0%, #4080ff 100%);
   padding: $spacing-xl $spacing-lg 80rpx;
+  padding-top: calc(#{$spacing-xl} + env(safe-area-inset-top));
 }
 
 .companyInfo {
@@ -57,26 +59,35 @@
   background-color: $color-bg-card;
   border-radius: $radius-lg;
   padding: $spacing-lg;
-  margin-bottom: $spacing-lg;
+  margin-bottom: $spacing-md;
   box-shadow: $shadow-card;
   display: flex;
+  align-items: center;
   justify-content: space-around;
 }
 
 .statItem {
   text-align: center;
+  flex: 1;
 }
 
 .statNumber {
   font-size: $font-size-xxl;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
+  line-height: 1.2;
 }
 
 .statLabel {
   font-size: $font-size-xs;
   color: $color-text-tertiary;
   margin-top: $spacing-xs;
+}
+
+.statDivider {
+  width: 2rpx;
+  height: 60rpx;
+  background-color: $color-divider;
 }
 
 .sectionCard {
@@ -87,10 +98,56 @@
   overflow: hidden;
 }
 
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md $spacing-lg $spacing-xs;
+}
+
 .sectionTitle {
   font-size: $font-size-sm;
   color: $color-text-tertiary;
-  padding: $spacing-md $spacing-lg $spacing-xs;
+  font-weight: $font-weight-medium;
+}
+
+.sectionMore {
+  font-size: $font-size-sm;
+  color: $color-primary;
+}
+
+.sectionCount {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.cityGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  padding: $spacing-md $spacing-lg $spacing-lg;
+}
+
+.cityGridItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: calc(50% - #{$spacing-sm / 2});
+  padding: $spacing-sm $spacing-md;
+  background-color: #f8faff;
+  border-radius: $radius-md;
+  transition: all $transition-base;
+}
+
+.cityGridItem:active {
+  background-color: #f0f5ff;
+  transform: scale(0.98);
+}
+
+.cityGridName {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
 }
 
 .menuItem {
@@ -167,7 +224,7 @@
 }
 
 .notesList {
-  padding: 0 $spacing-sm $spacing-sm;
+  padding: 0 $spacing-lg $spacing-lg;
 }
 
 .noteItem {
@@ -175,6 +232,16 @@
   background-color: #f8faff;
   border-radius: $radius-md;
   margin-bottom: $spacing-sm;
+  transition: all $transition-base;
+}
+
+.noteItem:last-child {
+  margin-bottom: 0;
+}
+
+.noteItem:active {
+  background-color: #f0f5ff;
+  transform: scale(0.99);
 }
 
 .noteHeader {
@@ -199,4 +266,14 @@
   font-size: $font-size-sm;
   color: $color-text-secondary;
   line-height: 1.5;
+}
+
+.footerTip {
+  text-align: center;
+  padding: $spacing-lg 0;
+}
+
+.footerTipText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
 }

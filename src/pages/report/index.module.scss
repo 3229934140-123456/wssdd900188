@@ -22,11 +22,17 @@
   color: $color-text-primary;
 }
 
+.subtitle {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-top: $spacing-xs;
+}
+
 .highlightCard {
   background: linear-gradient(135deg, #f53f3f 0%, #ff7d00 100%);
   border-radius: $radius-lg;
   padding: $spacing-xl;
-  margin-bottom: $spacing-lg;
+  margin-bottom: $spacing-md;
   box-shadow: $shadow-card;
   position: relative;
   overflow: hidden;
@@ -49,6 +55,32 @@
 .highlightDesc {
   font-size: $font-size-sm;
   color: rgba(255, 255, 255, 0.8);
+}
+
+.quickStats {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+}
+
+.quickStatItem {
+  flex: 1;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  text-align: center;
+  box-shadow: $shadow-card;
+}
+
+.quickStatNumber {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  line-height: 1.2;
+}
+
+.quickStatLabel {
+  font-size: $font-size-xs;
+  margin-top: $spacing-xs;
+  font-weight: $font-weight-medium;
 }
 
 .sectionCard {
@@ -85,31 +117,51 @@
   flex: 1;
 }
 
-.changeList {
+.cityGrid {
   display: flex;
   flex-direction: column;
-  gap: $spacing-md;
+  gap: $spacing-sm;
 }
 
-.changeItem {
-  display: flex;
-  align-items: center;
+.cityGridItem {
   padding: $spacing-md;
   background-color: #f8faff;
   border-radius: $radius-md;
+  transition: all $transition-base;
 }
 
-.cityName {
+.cityGridItem:active {
+  background-color: #f0f5ff;
+  transform: scale(0.98);
+}
+
+.cityGridHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-xs;
+}
+
+.cityGridName {
   font-size: $font-size-md;
-  font-weight: $font-weight-medium;
+  font-weight: $font-weight-semibold;
   color: $color-text-primary;
-  width: 100rpx;
 }
 
-.arrow {
-  margin: 0 $spacing-sm;
-  color: $color-text-tertiary;
+.cityGridDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.4;
+}
+
+.allGood {
+  text-align: center;
+  padding: $spacing-xl 0;
+}
+
+.allGoodText {
   font-size: $font-size-md;
+  color: $color-text-secondary;
 }
 
 .keywordsWrap {
@@ -161,6 +213,7 @@
   height: 100%;
   background: linear-gradient(90deg, #165dff 0%, #4080ff 100%);
   border-radius: $radius-round;
+  transition: width $transition-base;
 }
 
 .platformCount {
@@ -171,13 +224,38 @@
   text-align: right;
 }
 
+.actionSection {
+  margin-top: $spacing-lg;
+}
+
+.previewBtn {
+  @include button-reset;
+  width: 100%;
+  height: $button-height-md;
+  background-color: $color-bg-card;
+  border-radius: $radius-button;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+}
+
+.previewBtn:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.previewBtnText {
+  font-size: $font-size-md;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
 .shareBtn {
   @include button-reset;
   width: 100%;
   height: $button-height-lg;
   background: linear-gradient(135deg, #165dff 0%, #4080ff 100%);
   border-radius: $radius-button;
-  margin-top: $spacing-lg;
   transition: all $transition-base;
 }
 
@@ -203,6 +281,12 @@
   flex-direction: column;
   align-items: center;
   padding: $spacing-md;
+  transition: all $transition-base;
+}
+
+.shareOption:active {
+  transform: scale(0.95);
+  opacity: 0.8;
 }
 
 .shareOptionIcon {
@@ -218,4 +302,111 @@
 .shareOptionText {
   font-size: $font-size-xs;
   color: $color-text-secondary;
+}
+
+.previewMask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+}
+
+.previewModal {
+  width: 100%;
+  max-height: 85vh;
+  background-color: $color-bg-card;
+  border-radius: $radius-xl $radius-xl 0 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.previewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-lg;
+  border-bottom: 2rpx solid $color-divider;
+  flex-shrink: 0;
+}
+
+.previewTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.previewClose {
+  font-size: 48rpx;
+  color: $color-text-tertiary;
+  line-height: 1;
+  width: 48rpx;
+  text-align: center;
+}
+
+.previewContent {
+  flex: 1;
+  padding: $spacing-lg;
+  overflow-y: auto;
+  background-color: #f8faff;
+}
+
+.previewText {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  line-height: 2;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.previewActions {
+  display: flex;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-lg;
+  padding-bottom: calc(#{$spacing-md} + env(safe-area-inset-bottom));
+  border-top: 2rpx solid $color-divider;
+  flex-shrink: 0;
+}
+
+.previewActionSecondary {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-lg;
+  background-color: $color-bg-hover;
+  border-radius: $radius-button;
+  transition: all $transition-base;
+}
+
+.previewActionSecondary:active {
+  opacity: 0.9;
+}
+
+.previewActionSecondaryText {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.previewActionPrimary {
+  @include button-reset;
+  flex: 1.5;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, #165dff 0%, #4080ff 100%);
+  border-radius: $radius-button;
+  transition: all $transition-base;
+}
+
+.previewActionPrimary:active {
+  opacity: 0.9;
+}
+
+.previewActionPrimaryText {
+  font-size: $font-size-md;
+  color: #ffffff;
+  font-weight: $font-weight-semibold;
 }

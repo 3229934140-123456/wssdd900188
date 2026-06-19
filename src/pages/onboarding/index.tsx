@@ -14,7 +14,7 @@ const OPTIONAL_CITIES = [
 const OnboardingPage: React.FC = () => {
   const router = useRouter();
   const isEdit = router.params.edit === '1';
-  const { companyInfo, setCompanyInfo, setIsOnboarded } = useApp();
+  const { companyInfo, setCompanyInfo, setIsOnboarded, syncCitiesFromCompany } = useApp();
 
   const [companyName, setCompanyName] = useState(companyInfo.name);
   const [shortNames, setShortNames] = useState(companyInfo.shortNames.join('、'));
@@ -56,6 +56,10 @@ const OnboardingPage: React.FC = () => {
       shortNames: names.length > 0 ? names : [companyName.trim()],
       cities: selectedCities
     });
+
+    setTimeout(() => {
+      syncCitiesFromCompany();
+    }, 50);
 
     setIsOnboarded(true);
 

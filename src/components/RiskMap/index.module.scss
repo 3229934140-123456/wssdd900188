@@ -126,3 +126,16 @@
   font-size: $font-size-xs;
   color: $color-text-secondary;
 }
+
+.emptyMap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}

@@ -3,6 +3,7 @@ import { View, Text, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { useApp } from '@/store/AppContext';
 import NoteTag from '@/components/NoteTag';
+import StatusBadge from '@/components/StatusBadge';
 import { NOTE_STATUS_OPTIONS } from '@/types';
 import styles from './index.module.scss';
 
@@ -10,10 +11,18 @@ const MinePage: React.FC = () => {
   const { companyInfo, cityRisks, eventNotes } = useApp();
 
   const stats = useMemo(() => {
-    const handled = eventNotes.length;
-    const pending = cityRisks.filter(c => c.level === 'red' || c.level === 'yellow').length;
-    return { cities: companyInfo.cities.length, handled, pending };
-  }, [companyInfo, cityRisks, eventNotes]);
+    const red = cityRisks.filter(c => c.level === 'red').length;
+    const yellow = cityRisks.filter(c => c.level === 'yellow').length;
+    const green = cityRisks.filter(c => c.level === 'green').length;
+    return {
+      total: cityRisks.length,
+      red,
+      yellow,
+      green,
+      handled: eventNotes.length,
+      pending: red + yellow
+    };
+  }, [cityRisks, eventNotes]);
 
   const getStatusColor = (status: string) => {
     const opt = NOTE_STATUS_OPTIONS.find(o => o.value === status);
@@ -24,11 +33,20 @@ const MinePage: React.FC = () => {
     Taro.navigateTo({ url: '/pages/onboarding/index?edit=1' });
   };
 
+  const handleCityClick = (cityId: string) => {
+    Taro.navigateTo({ url: `/pages/city-detail/index?id=${cityId}` });
+  };
+
   const handleMenuItem = (action: string) => {
     Taro.showToast({ title: `${action}功能开发中`, icon: 'none' });
   };
 
   const firstChar = companyInfo.name.charAt(0);
+
+  const sortedCities = useMemo(() => {
+    const order = { red: 0, yellow: 1, green: 2 };
+    return [...cityRisks].sort((a, b) => order[a.level] - order[b.level]);
+  }, [cityRisks]);
 
   return (
     <ScrollView scrollY className={styles.page}>
@@ -47,13 +65,15 @@ const MinePage: React.FC = () => {
       <View className={styles.content}>
         <View className={styles.statsCard}>
           <View className={styles.statItem}>
-            <Text className={styles.statNumber}>{stats.cities}</Text>
+            <Text className={styles.statNumber}>{stats.total}</Text>
             <Text className={styles.statLabel}>监控城市</Text>
           </View>
+          <View className={styles.statDivider}></View>
           <View className={styles.statItem}>
             <Text className={styles.statNumber} style={{ color: '#f53f3f' }}>{stats.pending}</Text>
             <Text className={styles.statLabel}>待处理风险</Text>
           </View>
+          <View className={styles.statDivider}></View>
           <View className={styles.statItem}>
             <Text className={styles.statNumber} style={{ color: '#00b42a' }}>{stats.handled}</Text>
             <Text className={styles.statLabel}>已处理事件</Text>
@@ -61,10 +81,29 @@ const MinePage: React.FC = () => {
         </View>
 
         <View className={styles.sectionCard}>
+          <View className={styles.sectionHeader}>
+            <Text className={styles.sectionTitle}>监控城市一览</Text>
+            <Text className={styles.sectionMore} onClick={handleEditCompany}>管理 ›</Text>
+          </View>
+          <View className={styles.cityGrid}>
+            {sortedCities.map(city => (
+              <View
+                key={city.id}
+                className={styles.cityGridItem}
+                onClick={() => handleCityClick(city.id)}
+              >
+                <Text className={styles.cityGridName}>{city.cityName}</Text>
+                <StatusBadge level={city.level} size="sm" />
+              </View>
+            ))}
+          </View>
+        </View>
+
+        <View className={styles.sectionCard}>
           <Text className={styles.sectionTitle}>公司信息</Text>
           <View className={styles.menuItem} onClick={handleEditCompany}>
             <View className={styles.menuIcon} style={{ backgroundColor: '#165dff' }}>
-              <Text className={styles.menuIconText}>公</Text>
+              <Text className={styles.menuIconText}>编</Text>
             </View>
             <View className={styles.menuContent}>
               <Text className={styles.menuLabel}>编辑公司信息</Text>
@@ -72,21 +111,21 @@ const MinePage: React.FC = () => {
             </View>
             <Text className={styles.menuArrow}>›</Text>
           </View>
-          <View className={styles.cityList}>
-            {companyInfo.cities.map((city, idx) => (
-              <View key={idx} className={styles.cityTag}>
-                <Text className={styles.cityTagText}>{city}</Text>
-              </View>
-            ))}
-          </View>
         </View>
 
         {eventNotes.length > 0 && (
           <View className={styles.sectionCard}>
-            <Text className={styles.sectionTitle}>最近处理记录</Text>
+            <View className={styles.sectionHeader}>
+              <Text className={styles.sectionTitle}>最近处理记录</Text>
+              <Text className={styles.sectionCount}>{eventNotes.length} 条</Text>
+            </View>
             <View className={styles.notesList}>
               {eventNotes.slice(0, 5).map(note => (
-                <View key={note.id} className={styles.noteItem}>
+                <View
+                  key={note.id}
+                  className={styles.noteItem}
+                  onClick={() => handleCityClick(note.cityId)}
+                >
                   <View className={styles.noteHeader}>
                     <View style={{ display: 'flex', alignItems: 'center', gap: '16rpx' }}>
                       <Text className={styles.noteCity}>{note.cityName}</Text>
@@ -129,10 +168,14 @@ const MinePage: React.FC = () => {
             </View>
             <View className={styles.menuContent}>
               <Text className={styles.menuLabel}>关于我们</Text>
-              <Text className={styles.menuDesc}>版本 v1.0.0</Text>
+              <Text className={styles.menuDesc}>版本 v1.1.0</Text>
             </View>
             <Text className={styles.menuArrow}>›</Text>
           </View>
+        </View>
+
+        <View className={styles.footerTip}>
+          <Text className={styles.footerTipText}>数据本地存储 · 保护您的隐私</Text>
         </View>
       </View>
     </ScrollView>

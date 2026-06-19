@@ -1,26 +1,39 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { CityRisk, RiskLevel } from '@/types';
 import { getRiskLevelColor } from '@/utils';
+import { useApp } from '@/store/AppContext';
 import styles from './index.module.scss';
 
 interface RiskMapProps {
   cities: CityRisk[];
 }
 
-const CITY_POSITIONS: Record<string, { x: number; y: number }> = {
-  '北京': { x: 68, y: 25 },
-  '上海': { x: 75, y: 55 },
-  '广州': { x: 62, y: 85 },
-  '深圳': { x: 58, y: 88 },
-  '杭州': { x: 72, y: 60 },
-  '成都': { x: 32, y: 55 },
-  '武汉': { x: 55, y: 58 },
-  '西安': { x: 40, y: 40 }
-};
+const FALLBACK_POSITIONS = [
+  { x: 25, y: 30 }, { x: 45, y: 25 }, { x: 65, y: 30 }, { x: 80, y: 35 },
+  { x: 30, y: 50 }, { x: 50, y: 45 }, { x: 70, y: 50 }, { x: 85, y: 55 },
+  { x: 35, y: 70 }, { x: 55, y: 65 }, { x: 75, y: 70 }, { x: 88, y: 75 },
+  { x: 28, y: 85 }, { x: 48, y: 80 }, { x: 68, y: 85 }, { x: 82, y: 88 },
+  { x: 22, y: 60 }, { x: 42, y: 55 }, { x: 62, y: 60 }, { x: 78, y: 65 }
+];
 
 const RiskMap: React.FC<RiskMapProps> = ({ cities }) => {
+  const { cityCoords } = useApp();
+
+  const positionedCities = useMemo(() => {
+    let fallbackIndex = 0;
+    return cities.map(city => {
+      const pos = cityCoords[city.cityName];
+      if (pos) {
+        return { ...city, x: pos.x, y: pos.y };
+      }
+      const fallback = FALLBACK_POSITIONS[fallbackIndex % FALLBACK_POSITIONS.length];
+      fallbackIndex++;
+      return { ...city, x: fallback.x, y: fallback.y };
+    });
+  }, [cities, cityCoords]);
+
   const handleCityClick = (city: CityRisk) => {
     Taro.navigateTo({
       url: `/pages/city-detail/index?id=${city.id}`
@@ -33,18 +46,18 @@ const RiskMap: React.FC<RiskMapProps> = ({ cities }) => {
     return '';
   };
 
+  const hasPositionedCities = positionedCities.length > 0;
+
   return (
     <View className={styles.mapContainer}>
       <View className={styles.mapOutline}>
-        {cities.map((city) => {
-          const pos = CITY_POSITIONS[city.cityName];
-          if (!pos) return null;
+        {hasPositionedCities ? positionedCities.map((city) => {
           const color = getRiskLevelColor(city.level);
           return (
             <View
               key={city.id}
               className={styles.cityMarker}
-              style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
+              style={{ left: `${city.x}%`, top: `${city.y}%` }}
               onClick={() => handleCityClick(city)}
             >
               <View className={`${styles.markerPulse} ${getLevelPulse(city.level)}`} style={{ backgroundColor: color }}></View>
@@ -57,7 +70,11 @@ const RiskMap: React.FC<RiskMapProps> = ({ cities }) => {
               )}
             </View>
           );
-        })}
+        }) : (
+          <View className={styles.emptyMap}>
+            <Text className={styles.emptyText}>暂无监控城市</Text>
+          </View>
+        )}
       </View>
 
       <View className={styles.legend}>

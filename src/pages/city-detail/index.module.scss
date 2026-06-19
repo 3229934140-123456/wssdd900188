@@ -18,23 +18,13 @@
   font-size: $font-size-xxl;
   font-weight: $font-weight-bold;
   color: $color-text-primary;
+  line-height: 1.2;
 }
 
-.metaInfo {
-  display: flex;
-  align-items: center;
-  gap: $spacing-md;
-  margin-bottom: $spacing-lg;
-}
-
-.metaItem {
+.cityMeta {
   font-size: $font-size-sm;
   color: $color-text-secondary;
-}
-
-.metaValue {
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
+  margin-top: $spacing-xs;
 }
 
 .summaryCard {
@@ -89,6 +79,67 @@
   font-size: $font-size-md;
   color: $color-text-primary;
   line-height: 1.6;
+}
+
+.trendCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.trendHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-lg;
+}
+
+.trendTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.trendLevel {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.trendLevelText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.trendBars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 200rpx;
+  padding: $spacing-md 0;
+}
+
+.trendBarItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+}
+
+.trendBar {
+  width: 36rpx;
+  border-radius: $radius-sm $radius-sm 0 0;
+  margin-bottom: $spacing-sm;
+  transition: height $transition-base, background-color $transition-base;
+}
+
+.trendDay {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
 }
 
 .sourcesCard {
@@ -177,30 +228,68 @@
   color: $color-text-tertiary;
 }
 
-.noteItem {
-  padding: $spacing-md;
+.timeline {
+  position: relative;
+  padding-left: 0;
+}
+
+.timelineItem {
+  position: relative;
+  padding-left: 48rpx;
+  padding-bottom: $spacing-lg;
+}
+
+.timelineItem:last-child {
+  padding-bottom: 0;
+}
+
+.timelineDot {
+  position: absolute;
+  left: 0;
+  top: 8rpx;
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  z-index: 2;
+  border: 4rpx solid #ffffff;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.timelineLine {
+  position: absolute;
+  left: 9rpx;
+  top: 36rpx;
+  width: 2rpx;
+  bottom: -8rpx;
+  background-color: $color-border;
+}
+
+.timelineContent {
   background-color: #f8faff;
   border-radius: $radius-md;
-  margin-bottom: $spacing-sm;
+  padding: $spacing-md;
 }
 
-.noteItem:last-child {
-  margin-bottom: 0;
-}
-
-.noteHeader {
+.timelineHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: $spacing-xs;
 }
 
-.noteTime {
-  font-size: $font-size-xs;
-  color: $color-text-tertiary;
+.timelineTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
 }
 
-.noteDesc {
+.timelineTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  white-space: nowrap;
+  margin-left: $spacing-sm;
+}
+
+.timelineDesc {
   font-size: $font-size-sm;
   color: $color-text-secondary;
   line-height: 1.5;
@@ -227,6 +316,7 @@
   box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.08);
   display: flex;
   gap: $spacing-md;
+  z-index: 50;
 }
 
 .secondaryBtn {
@@ -306,6 +396,15 @@
   font-size: 48rpx;
   color: $color-text-tertiary;
   line-height: 1;
+  width: 48rpx;
+  text-align: center;
+}
+
+.modalHint {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-md;
+  font-weight: $font-weight-medium;
 }
 
 .statusOptions {
@@ -318,13 +417,19 @@
 .statusOption {
   padding: $spacing-sm $spacing-md;
   border-radius: $radius-button;
-  border: 2rpx solid $color-border;
+  background-color: $color-bg-hover;
+  border: 2rpx solid transparent;
   transition: all $transition-base;
 }
 
 .statusOptionActive {
   border-color: $color-primary;
   background-color: $color-tag-bg-blue;
+}
+
+.statusOption:active {
+  opacity: 0.8;
+  transform: scale(0.98);
 }
 
 .statusOptionText {
@@ -341,7 +446,7 @@
   background-color: $color-bg-page;
   border-radius: $radius-md;
   padding: $spacing-md;
-  margin-bottom: $spacing-lg;
+  margin-bottom: $spacing-md;
 }
 
 .input {
@@ -349,7 +454,16 @@
   font-size: $font-size-md;
   color: $color-text-primary;
   line-height: 1.5;
-  min-height: 160rpx;
+}
+
+.tipText {
+  font-size: $font-size-xs;
+  color: #00b42a;
+  background-color: #e8ffea;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-lg;
+  line-height: 1.5;
 }
 
 .submitBtn {
@@ -370,48 +484,4 @@
   color: #ffffff;
   font-size: $font-size-md;
   font-weight: $font-weight-semibold;
-}
-
-.trendCard {
-  background-color: $color-bg-card;
-  border-radius: $radius-lg;
-  padding: $spacing-xl;
-  margin-bottom: $spacing-md;
-  box-shadow: $shadow-card;
-}
-
-.trendTitle {
-  font-size: $font-size-lg;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-  margin-bottom: $spacing-lg;
-}
-
-.trendBars {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  height: 200rpx;
-  padding: $spacing-md 0;
-}
-
-.trendBarItem {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  height: 100%;
-}
-
-.trendBar {
-  width: 40rpx;
-  border-radius: $radius-sm $radius-sm 0 0;
-  background: linear-gradient(180deg, #4080ff 0%, #165dff 100%);
-  margin-bottom: $spacing-sm;
-}
-
-.trendDay {
-  font-size: $font-size-xs;
-  color: $color-text-tertiary;
 }

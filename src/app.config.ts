@@ -4,7 +4,8 @@ export default defineAppConfig({
     'pages/report/index',
     'pages/mine/index',
     'pages/city-detail/index',
-    'pages/onboarding/index'
+    'pages/onboarding/index',
+    'pages/history/index'
   ],
   window: {
     backgroundTextStyle: 'light',

@@ -117,7 +117,10 @@ const MinePage: React.FC = () => {
           <View className={styles.sectionCard}>
             <View className={styles.sectionHeader}>
               <Text className={styles.sectionTitle}>最近处理记录</Text>
-              <Text className={styles.sectionCount}>{eventNotes.length} 条</Text>
+              <Text
+                className={styles.sectionMore}
+                onClick={() => Taro.navigateTo({ url: '/pages/history/index' })}
+              >查看全部 ›</Text>
             </View>
             <View className={styles.notesList}>
               {eventNotes.slice(0, 5).map(note => (
@@ -139,6 +142,25 @@ const MinePage: React.FC = () => {
             </View>
           </View>
         )}
+
+        <View className={styles.sectionCard}>
+          <Text className={styles.sectionTitle}>数据与记录</Text>
+          <View
+            className={styles.menuItem}
+            onClick={() => Taro.navigateTo({ url: '/pages/history/index' })}
+          >
+            <View className={styles.menuIcon} style={{ backgroundColor: '#722ed1' }}>
+              <Text className={styles.menuIconText}>归</Text>
+            </View>
+            <View className={styles.menuContent}>
+              <Text className={styles.menuLabel}>历史归档</Text>
+              <Text className={styles.menuDesc}>
+                查看所有处理备注和风险变更记录，支持按城市和状态筛选
+              </Text>
+            </View>
+            <Text className={styles.menuArrow}>›</Text>
+          </View>
+        </View>
 
         <View className={styles.sectionCard}>
           <Text className={styles.sectionTitle}>更多</Text>

@@ -8,63 +8,24 @@ import { NOTE_STATUS_OPTIONS, EventNote } from '@/types';
 import { getRiskLevelColor } from '@/utils';
 import styles from './index.module.scss';
 
-interface TimelineItem {
-  id: string;
-  type: 'note' | 'level_change' | 'init';
-  title: string;
-  description: string;
-  time: string;
-  color?: string;
-  tag?: string;
-  tagColor?: string;
-}
-
 const CityDetailPage: React.FC = () => {
   const router = useRouter();
   const cityId = router.params.id || '1';
-  const { getCityRisk, getNotesByCity, addEventNote, updateCityRiskLevel } = useApp();
+  const { getCityRisk, getCityTimeline, addEventNote, updateCityRiskLevel } = useApp();
 
   const city = getCityRisk(cityId);
-  const notes = getNotesByCity(cityId);
+  const timeline = useMemo(() => getCityTimeline(cityId), [getCityTimeline, cityId]);
+
   const [showModal, setShowModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('');
   const [noteDesc, setNoteDesc] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const timeline = useMemo<TimelineItem[]>(() => {
-    const items: TimelineItem[] = [];
-
-    if (city) {
-      items.push({
-        id: 'init',
-        type: 'init',
-        title: `${city.cityName}开始监控`,
-        description: '已纳入舆情监控范围，持续关注中',
-        time: '监控已启动',
-        color: '#165dff'
-      });
-    }
-
-    notes.forEach(note => {
-      items.push({
-        id: note.id,
-        type: 'note',
-        title: note.statusText,
-        description: note.description,
-        time: note.createdAt,
-        color: getStatusColor(note.status),
-        tag: note.statusText,
-        tagColor: getStatusColor(note.status)
-      });
+  useEffect(() => {
+    Taro.setNavigationBarTitle({
+      title: city ? `${city.cityName} · 舆情详情` : '城市详情'
     });
-
-    items.sort((a, b) => {
-      if (a.type === 'init') return 1;
-      if (b.type === 'init') return -1;
-      return b.time.localeCompare(a.time);
-    });
-
-    return items;
-  }, [city, notes]);
+  }, [city]);
 
   const getStatusColor = (status: string) => {
     const opt = NOTE_STATUS_OPTIONS.find(o => o.value === status);
@@ -77,6 +38,18 @@ const CityDetailPage: React.FC = () => {
       gray: '#86909c'
     };
     return colorMap[opt.color] || '#86909c';
+  };
+
+  const getTimelineColor = (item: any) => {
+    if (item.type === 'note') {
+      return getStatusColor(item.status || '');
+    }
+    if (item.type === 'level_change') {
+      if (item.toLevel === 'red') return '#f53f3f';
+      if (item.toLevel === 'yellow') return '#ff7d00';
+      return '#00b42a';
+    }
+    return '#165dff';
   };
 
   const trendData = useMemo(() => {
@@ -110,6 +83,7 @@ const CityDetailPage: React.FC = () => {
   };
 
   const handleMarkResolved = () => {
+    if (saving) return;
     Taro.showModal({
       title: '确认标记为已解决？',
       content: '标记后该城市风险等级将降为"平稳"，并添加一条处理记录。',
@@ -117,20 +91,26 @@ const CityDetailPage: React.FC = () => {
       confirmColor: '#00b42a',
       success: (res) => {
         if (res.confirm) {
-          addEventNote({
-            cityId,
-            cityName: city.cityName,
-            status: 'resolved',
-            statusText: '已解决',
-            description: '已确认问题解决，舆情恢复平稳。'
-          });
-          Taro.showToast({ title: '已标记为平稳', icon: 'success' });
+          setSaving(true);
+          try {
+            addEventNote({
+              cityId,
+              cityName: city.cityName,
+              status: 'resolved',
+              statusText: '已解决',
+              description: '已确认问题解决，舆情恢复平稳。'
+            });
+            Taro.showToast({ title: '已标记为平稳', icon: 'success' });
+          } finally {
+            setTimeout(() => setSaving(false), 100);
+          }
         }
       }
     });
   };
 
   const handleAddNote = () => {
+    if (saving) return;
     if (!selectedStatus) {
       Taro.showToast({ title: '请选择处理状态', icon: 'none' });
       return;
@@ -140,17 +120,22 @@ const CityDetailPage: React.FC = () => {
       return;
     }
     const statusOpt = NOTE_STATUS_OPTIONS.find(o => o.value === selectedStatus);
-    addEventNote({
-      cityId,
-      cityName: city.cityName,
-      status: selectedStatus as any,
-      statusText: statusOpt?.label || '',
-      description: noteDesc.trim()
-    });
-    Taro.showToast({ title: '备注已添加', icon: 'success' });
-    setShowModal(false);
-    setSelectedStatus('');
-    setNoteDesc('');
+    setSaving(true);
+    try {
+      addEventNote({
+        cityId,
+        cityName: city.cityName,
+        status: selectedStatus as any,
+        statusText: statusOpt?.label || '',
+        description: noteDesc.trim()
+      });
+      Taro.showToast({ title: '备注已添加', icon: 'success' });
+      setShowModal(false);
+      setSelectedStatus('');
+      setNoteDesc('');
+    } finally {
+      setTimeout(() => setSaving(false), 100);
+    }
   };
 
   const handleShare = () => {
@@ -172,6 +157,9 @@ const CityDetailPage: React.FC = () => {
       }
     });
   };
+
+  const levelText = city.level === 'red' ? '高风险' : city.level === 'yellow' ? '中风险' : '低风险';
+  const levelColor = city.level === 'red' ? 'red' : city.level === 'yellow' ? 'yellow' : 'green';
 
   return (
     <View className={styles.page}>
@@ -224,10 +212,7 @@ const CityDetailPage: React.FC = () => {
           <Text className={styles.trendTitle}>近7日讨论趋势</Text>
           <View className={styles.trendLevel}>
             <Text className={styles.trendLevelText}>当前：</Text>
-            <NoteTag
-              label={city.level === 'red' ? '高风险' : city.level === 'yellow' ? '中风险' : '低风险'}
-              color={city.level === 'red' ? 'red' : city.level === 'yellow' ? 'yellow' : 'green'}
-            />
+            <NoteTag label={levelText} color={levelColor} />
           </View>
         </View>
         <View className={styles.trendBars}>
@@ -265,25 +250,46 @@ const CityDetailPage: React.FC = () => {
 
       <View className={styles.notesCard}>
         <View className={styles.notesHeader}>
-          <Text className={styles.notesTitle}>处理时间线</Text>
-          <Text className={styles.notesCount}>{notes.length} 条记录</Text>
+          <Text className={styles.notesTitle}>处理进度流</Text>
+          <Text className={styles.notesCount}>{timeline.length} 条记录</Text>
         </View>
 
         {timeline.length > 0 ? (
           <View className={styles.timeline}>
-            {timeline.map((item, idx) => (
-              <View key={item.id} className={styles.timelineItem}>
-                <View className={styles.timelineDot} style={{ backgroundColor: item.color }}></View>
-                {idx < timeline.length - 1 && <View className={styles.timelineLine}></View>}
-                <View className={styles.timelineContent}>
-                  <View className={styles.timelineHeader}>
-                    <Text className={styles.timelineTitle} style={{ color: item.color }}>{item.title}</Text>
-                    <Text className={styles.timelineTime}>{item.time}</Text>
+            {timeline.map((item: any, idx: number) => {
+              const color = getTimelineColor(item);
+              return (
+                <View key={item.id} className={styles.timelineItem}>
+                  <View className={styles.timelineDot} style={{ backgroundColor: color }}></View>
+                  {idx < timeline.length - 1 && <View className={styles.timelineLine}></View>}
+                  <View className={styles.timelineContent}>
+                    <View className={styles.timelineHeader}>
+                      <View style={{ display: 'flex', alignItems: 'center', gap: '12rpx' }}>
+                        <Text className={styles.timelineTitle} style={{ color }}>{item.title}</Text>
+                        {item.type === 'level_change' && item.toLevel && (
+                          <StatusBadge level={item.toLevel} size="sm" />
+                        )}
+                      </View>
+                      <Text className={styles.timelineTime}>{item.time}</Text>
+                    </View>
+                    <Text className={styles.timelineDesc}>{item.description}</Text>
+                    {item.fromLevel && item.type === 'level_change' && (
+                      <View className={styles.timelineChange}>
+                        <NoteTag
+                          label={item.fromLevel === 'green' ? '平稳' : item.fromLevel === 'yellow' ? '关注' : '预警'}
+                          color={item.fromLevel === 'green' ? 'green' : item.fromLevel === 'yellow' ? 'yellow' : 'red'}
+                        />
+                        <Text className={styles.timelineArrow}>→</Text>
+                        <NoteTag
+                          label={item.toLevel === 'green' ? '平稳' : item.toLevel === 'yellow' ? '关注' : '预警'}
+                          color={item.toLevel === 'green' ? 'green' : item.toLevel === 'yellow' ? 'yellow' : 'red'}
+                        />
+                      </View>
+                    )}
                   </View>
-                  <Text className={styles.timelineDesc}>{item.description}</Text>
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         ) : (
           <View className={styles.emptyNotes}>
@@ -296,20 +302,28 @@ const CityDetailPage: React.FC = () => {
         <Button className={styles.secondaryBtn} onClick={handleShare}>
           <Text className={styles.secondaryBtnText}>转发</Text>
         </Button>
-        <Button className={styles.secondaryBtn} onClick={handleMarkResolved}>
+        <Button
+          className={styles.secondaryBtn}
+          onClick={handleMarkResolved}
+          disabled={saving || city.level === 'green'}
+        >
           <Text className={styles.secondaryBtnText}>标为已解决</Text>
         </Button>
-        <Button className={styles.primaryBtn} onClick={() => setShowModal(true)}>
-          <Text className={styles.primaryBtnText}>添加备注</Text>
+        <Button
+          className={styles.primaryBtn}
+          onClick={() => setShowModal(true)}
+          disabled={saving}
+        >
+          <Text className={styles.primaryBtnText}>{saving ? '保存中...' : '添加备注'}</Text>
         </Button>
       </View>
 
       {showModal && (
-        <View className={styles.modalMask} onClick={() => setShowModal(false)}>
+        <View className={styles.modalMask} onClick={() => !saving && setShowModal(false)}>
           <View className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <View className={styles.modalHeader}>
               <Text className={styles.modalTitle}>添加处理备注</Text>
-              <Text className={styles.modalClose} onClick={() => setShowModal(false)}>×</Text>
+              <Text className={styles.modalClose} onClick={() => !saving && setShowModal(false)}>×</Text>
             </View>
 
             <Text className={styles.modalHint}>选择处理状态</Text>
@@ -318,7 +332,7 @@ const CityDetailPage: React.FC = () => {
                 <View
                   key={opt.value}
                   className={`${styles.statusOption} ${selectedStatus === opt.value ? styles.statusOptionActive : ''}`}
-                  onClick={() => setSelectedStatus(opt.value)}
+                  onClick={() => !saving && setSelectedStatus(opt.value)}
                 >
                   <Text className={`${styles.statusOptionText} ${selectedStatus === opt.value ? styles.statusOptionActiveText : ''}`}>
                     {opt.label}
@@ -334,16 +348,21 @@ const CityDetailPage: React.FC = () => {
                 type="text"
                 placeholder="例如：已与投诉客户取得联系，对方表示接受道歉..."
                 value={noteDesc}
+                disabled={saving}
                 onInput={(e) => setNoteDesc(e.detail.value)}
               />
             </View>
 
             <Text className={styles.tipText}>
-              💡 选择"已解决"或"纯属谣言"后，风险等级会自动降级为"平稳"
+              💡 选择「已解决/纯属谣言/已发声明」后，风险会自动降级为平稳
             </Text>
 
-            <Button className={styles.submitBtn} onClick={handleAddNote}>
-              <Text className={styles.submitBtnText}>保存备注</Text>
+            <Button
+              className={styles.submitBtn}
+              onClick={handleAddNote}
+              disabled={saving}
+            >
+              <Text className={styles.submitBtnText}>{saving ? '保存中...' : '保存备注'}</Text>
             </Button>
           </View>
         </View>

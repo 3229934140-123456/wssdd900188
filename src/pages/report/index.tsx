@@ -111,7 +111,7 @@ const ReportPage: React.FC = () => {
 
       <View className={styles.changeCard}>
         <View className={styles.changeHeader}>
-          <Text className={styles.changeTitle}>昨日变动</Text>
+          <Text className={styles.changeTitle}>昨日变动明细</Text>
         </View>
         <View className={styles.changeStats}>
           <View className={styles.changeStatItem}>
@@ -136,17 +136,75 @@ const ReportPage: React.FC = () => {
             </View>
           </View>
         </View>
+
         {yesterdayChanges.newRisks.length > 0 && (
-          <View className={styles.changeList}>
+          <View className={styles.changeDetailSection}>
+            <View className={styles.changeDetailHeader}>
+              <Text className={styles.changeDetailDot} style={{ backgroundColor: '#f53f3f' }}></Text>
+              <Text className={styles.changeDetailTitle}>新增风险（{yesterdayChanges.newRisks.length}）</Text>
+            </View>
             {yesterdayChanges.newRisks.map(change => (
-              <View key={change.id} className={styles.changeItem}>
-                <Text className={styles.changeCity}>{change.cityName}</Text>
-                <View style={{ display: 'flex', alignItems: 'center', gap: '16rpx' }}>
-                  <Text className={styles.changeReason}>{change.reason}</Text>
+              <View key={change.id} className={styles.changeDetailRow}>
+                <Text className={styles.changeDetailCity}>{change.cityName}</Text>
+                <View className={styles.changeDetailInfo}>
+                  <Text className={styles.changeDetailReason} numberOfLines={1}>
+                    {change.reason || '监控中出现异常讨论'}
+                  </Text>
                   <StatusBadge level={change.toLevel} size="sm" />
                 </View>
               </View>
             ))}
+          </View>
+        )}
+
+        {yesterdayChanges.upgraded.length > 0 && (
+          <View className={styles.changeDetailSection}>
+            <View className={styles.changeDetailHeader}>
+              <Text className={styles.changeDetailDot} style={{ backgroundColor: '#ff7d00' }}></Text>
+              <Text className={styles.changeDetailTitle}>等级升级（{yesterdayChanges.upgraded.length}）</Text>
+            </View>
+            {yesterdayChanges.upgraded.map(change => (
+              <View key={change.id} className={styles.changeDetailRow}>
+                <Text className={styles.changeDetailCity}>{change.cityName}</Text>
+                <View className={styles.changeDetailInfo}>
+                  <View style={{ display: 'flex', alignItems: 'center', gap: '8rpx' }}>
+                    <StatusBadge level={change.fromLevel!} size="sm" />
+                    <Text className={styles.changeDetailArrow}>→</Text>
+                    <StatusBadge level={change.toLevel} size="sm" />
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {yesterdayChanges.downgraded.length > 0 && (
+          <View className={styles.changeDetailSection}>
+            <View className={styles.changeDetailHeader}>
+              <Text className={styles.changeDetailDot} style={{ backgroundColor: '#00b42a' }}></Text>
+              <Text className={styles.changeDetailTitle}>已处理降级（{yesterdayChanges.downgraded.length}）</Text>
+            </View>
+            {yesterdayChanges.downgraded.map(change => (
+              <View key={change.id} className={styles.changeDetailRow}>
+                <Text className={styles.changeDetailCity}>{change.cityName}</Text>
+                <View className={styles.changeDetailInfo}>
+                  <View style={{ display: 'flex', alignItems: 'center', gap: '8rpx' }}>
+                    <StatusBadge level={change.fromLevel!} size="sm" />
+                    <Text className={styles.changeDetailArrow}>→</Text>
+                    <StatusBadge level={change.toLevel} size="sm" />
+                  </View>
+                  {change.reason && (
+                    <Text className={styles.changeDetailReason} numberOfLines={1}>{change.reason}</Text>
+                  )}
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {yesterdayChanges.total === 0 && yesterdayChanges.downgraded.length === 0 && (
+          <View className={styles.changeNoData}>
+            <Text className={styles.changeNoDataText}>昨日无变动，整体平稳 🎉</Text>
           </View>
         )}
       </View>

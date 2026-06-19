@@ -127,6 +127,9 @@ interface AppContextType {
     total: number;
   };
   riskHistory: RiskChangeRecord[];
+  getCityTimeline: (cityId: string) => any[];
+  isOverdueUnprocessed: (cityId: string) => boolean;
+  getRecentlyUpgraded: (withinHours?: number) => RiskChangeRecord[];
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -293,6 +296,99 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return eventNotes.filter(n => n.cityId === cityId);
   }, [eventNotes]);
 
+  const getCityTimeline = useCallback((cityId: string) => {
+    type TimelineItem = {
+      id: string;
+      type: 'init' | 'note' | 'level_change';
+      title: string;
+      description: string;
+      time: string;
+      timestamp: number;
+      level?: RiskLevel;
+      fromLevel?: RiskLevel | null;
+      toLevel?: RiskLevel;
+      status?: string;
+      statusText?: string;
+    };
+
+    const items: TimelineItem[] = [];
+    const city = cityRisks.find(c => c.id === cityId);
+
+    if (city) {
+      const cityHistory = riskHistory.filter(r => r.cityId === cityId);
+      cityHistory.forEach(r => {
+        items.push({
+          id: `hist_${r.id}`,
+          type: 'level_change',
+          title: r.fromLevel === null
+            ? `开始监控（${r.toLevel === 'green' ? '平稳' : r.toLevel === 'yellow' ? '关注' : '预警'}）`
+            : `风险${r.toLevel === 'green' ? '下降' : r.toLevel === 'yellow' ? '变动' : '升级'}`,
+          description: r.reason || (r.fromLevel === null
+            ? '已纳入舆情监控范围'
+            : `${r.fromLevel === 'green' ? '平稳' : r.fromLevel === 'yellow' ? '关注' : '预警'} → ${r.toLevel === 'green' ? '平稳' : r.toLevel === 'yellow' ? '关注' : '预警'}`),
+          time: new Date(r.timestamp).toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-'),
+          timestamp: r.timestamp,
+          fromLevel: r.fromLevel,
+          toLevel: r.toLevel,
+          level: r.toLevel
+        });
+      });
+
+      const notes = getNotesByCity(cityId);
+      notes.forEach(n => {
+        const ts = Date.parse(n.createdAt.replace(/-/g, '/')) || Date.now();
+        items.push({
+          id: n.id,
+          type: 'note',
+          title: n.statusText,
+          description: n.description,
+          time: n.createdAt,
+          timestamp: ts,
+          status: n.status,
+          statusText: n.statusText
+        });
+      });
+
+      if (items.length === 0) {
+        items.push({
+          id: 'init_fallback',
+          type: 'init',
+          title: `${city.cityName}开始监控`,
+          description: '已纳入舆情监控范围，持续关注中',
+          time: city.lastUpdated,
+          timestamp: Date.parse(city.lastUpdated.replace(/-/g, '/')) || Date.now(),
+          level: city.level
+        });
+      }
+    }
+
+    items.sort((a, b) => b.timestamp - a.timestamp);
+    return items;
+  }, [cityRisks, riskHistory, eventNotes, getNotesByCity]);
+
+  const isOverdueUnprocessed = useCallback((cityId: string) => {
+    const city = cityRisks.find(c => c.id === cityId);
+    if (!city || city.level === 'green') return false;
+    const notes = getNotesByCity(cityId);
+    if (notes.length === 0) {
+      const ts = Date.parse(city.lastUpdated.replace(/-/g, '/')) || Date.now();
+      return (Date.now() - ts) > 24 * 60 * 60 * 1000;
+    }
+    const latestNote = notes[0];
+    const ts = Date.parse(latestNote.createdAt.replace(/-/g, '/')) || Date.now();
+    return (Date.now() - ts) > 24 * 60 * 60 * 1000;
+  }, [cityRisks, getNotesByCity]);
+
+  const getRecentlyUpgraded = useCallback((withinHours: number = 24) => {
+    const threshold = Date.now() - withinHours * 60 * 60 * 1000;
+    return riskHistory.filter(r =>
+      r.timestamp >= threshold &&
+      r.toLevel !== 'green' &&
+      ((r.fromLevel === 'green' && r.toLevel !== 'green') ||
+        (r.fromLevel === 'yellow' && r.toLevel === 'red'))
+    );
+  }, [riskHistory]);
+
   const getYesterdayChanges = useCallback(() => {
     const yesterday = getYesterdayStr();
     const yesterdayChanges = riskHistory.filter(r => r.date === yesterday);
@@ -349,6 +445,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
     const weekDay = weekDays[new Date().getDay()];
 
+    const formatLevel = (l: RiskLevel | null) => {
+      if (l === 'red') return '红色预警';
+      if (l === 'yellow') return '黄色关注';
+      if (l === 'green') return '平稳';
+      return '新增';
+    };
+
     return `【${companyInfo.name}·每日舆情早报】
 日期：${today} ${weekDay}
 
@@ -362,9 +465,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 ⬆️ 等级升级：${changes.upgraded.length} 个
 📉 风险下降：${changes.downgraded.length} 个
 
-━━━━ 重点关注城市 ━━━━
-${[...redCities, ...yellowCities].slice(0, 5).map((c, i) => `${i + 1}. ${c.cityName}（${c.level === 'red' ? '红色预警' : '黄色关注'}）
-   ${c.summary.whatHappened.slice(0, 30)}...`).join('\n')}
+${changes.newRisks.length > 0 ? `📌 新增风险明细：
+${changes.newRisks.map((r, i) => `${i + 1}. ${r.cityName}（${formatLevel(r.toLevel)}）- ${r.reason || '监控中出现异常讨论'}`).join('\n')}
+
+` : ''}${changes.upgraded.length > 0 ? `⬆️ 升级明细：
+${changes.upgraded.map((r, i) => `${i + 1}. ${r.cityName}：${formatLevel(r.fromLevel)} → ${formatLevel(r.toLevel)}${r.reason ? ` - ${r.reason}` : ''}`).join('\n')}
+
+` : ''}${changes.downgraded.length > 0 ? `📉 降级明细：
+${changes.downgraded.map((r, i) => `${i + 1}. ${r.cityName}：${formatLevel(r.fromLevel)} → ${formatLevel(r.toLevel)}${r.reason ? ` - ${r.reason}` : ''}`).join('\n')}
+
+` : ''}━━━━ 重点关注城市 ━━━━
+${[...redCities, ...yellowCities].length > 0
+  ? [...redCities, ...yellowCities].slice(0, 5).map((c, i) => `${i + 1}. ${c.cityName}（${c.level === 'red' ? '红色预警' : '黄色关注'}）
+   讨论量：${c.discussionCount}
+   ${c.summary.whatHappened.slice(0, 30)}...`).join('\n')
+  : '所有城市运行平稳，无重点关注项'}
 
 ━━━━ 负面热词 TOP5 ━━━━
 ${topKeywords.map((k, i) => `${i + 1}. ${k}`).join('\n')}
@@ -394,7 +509,10 @@ ${actionItems.map((a, i) => `${i + 1}. ${a}`).join('\n')}
       cityCoords: CITY_COORDS,
       generateReportContent,
       getYesterdayChanges,
-      riskHistory
+      riskHistory,
+      getCityTimeline,
+      isOverdueUnprocessed,
+      getRecentlyUpgraded
     }}>
       {children}
     </AppContext.Provider>

@@ -1,0 +1,251 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  padding: $spacing-lg;
+  padding-bottom: 80rpx;
+  background-color: $color-bg-page;
+}
+
+.navBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-lg;
+  padding-top: env(safe-area-inset-top);
+}
+
+.navBack {
+  font-size: 56rpx;
+  color: $color-text-primary;
+  width: 60rpx;
+  line-height: 1;
+  font-weight: 300;
+}
+
+.navTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.statsCard {
+  display: flex;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.statItem {
+  flex: 1;
+  text-align: center;
+}
+
+.statNumber {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  line-height: 1.2;
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  margin-top: $spacing-xs;
+}
+
+.statusStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.statusStatItem {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.statusStatCount {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.filterCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.filterRow {
+  margin-bottom: $spacing-md;
+}
+
+.filterRow:last-child {
+  margin-bottom: 0;
+}
+
+.filterLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+.filterChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.filterChip {
+  padding: $spacing-xs $spacing-md;
+  background-color: $color-bg-hover;
+  border-radius: $radius-round;
+  transition: all $transition-base;
+}
+
+.filterChipActive {
+  background: linear-gradient(135deg, #165dff 0%, #4080ff 100%);
+}
+
+.filterChipText {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: 1.4;
+}
+
+.filterChipActiveText {
+  color: #ffffff;
+  font-weight: $font-weight-medium;
+}
+
+.listHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: $spacing-md 0 $spacing-sm;
+  padding: 0 $spacing-xs;
+}
+
+.listTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.listCount {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.noteList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+}
+
+.noteItem {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+}
+
+.noteItem:active {
+  transform: scale(0.99);
+  opacity: 0.9;
+}
+
+.noteItemArchived {
+  opacity: 0.72;
+  background-color: #fafbfc;
+  border: 2rpx dashed #e5e6eb;
+  box-shadow: none;
+}
+
+.noteHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-sm;
+}
+
+.noteCity {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.archivedBadge {
+  padding: 2rpx 12rpx;
+  background-color: $color-bg-hover;
+  border-radius: $radius-xs;
+}
+
+.archivedText {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  line-height: 1.6;
+}
+
+.noteDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.6;
+  margin-bottom: $spacing-xs;
+}
+
+.noteTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.historyItem {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  box-shadow: $shadow-card;
+  border-left: 8rpx solid $color-primary;
+}
+
+.historyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-sm;
+}
+
+.historyArrow {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  font-weight: $font-weight-bold;
+}
+
+.empty {
+  text-align: center;
+  padding: $spacing-2xl 0;
+}
+
+.emptyText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}

@@ -14,8 +14,7 @@ const HomePage: React.FC = () => {
     cityRisks,
     getNotesByCity,
     getRecentlyUpgraded,
-    isOverdueUnprocessed,
-    getNotesByCity: _getNotesByCity
+    isOverdueUnprocessed
   } = useApp();
 
   const stats = useMemo(() => {
@@ -99,13 +98,8 @@ const HomePage: React.FC = () => {
     Taro.navigateTo({ url: `/pages/city-detail/index?id=${id}` });
   };
 
-  const getStatusColor = (status: string) => {
-    const opt = NOTE_STATUS_OPTIONS.find(o => o.value === status);
-    return opt?.color || 'gray';
-  };
-
   const getLatestNoteTag = (cityId: string) => {
-    const notes = _getNotesByCity(cityId);
+    const notes = getNotesByCity(cityId);
     if (notes.length === 0) return null;
     const latest = notes[0];
     const opt = NOTE_STATUS_OPTIONS.find(o => o.value === latest.status);

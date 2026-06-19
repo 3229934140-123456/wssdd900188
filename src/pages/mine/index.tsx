@@ -34,7 +34,12 @@ const MinePage: React.FC = () => {
   };
 
   const handleCityClick = (cityId: string) => {
-    Taro.navigateTo({ url: `/pages/city-detail/index?id=${cityId}` });
+    const city = cityRisks.find(c => c.id === cityId);
+    if (city) {
+      Taro.navigateTo({ url: `/pages/city-detail/index?id=${city.id}` });
+    } else {
+      Taro.showToast({ title: '该城市已停止监控', icon: 'none' });
+    }
   };
 
   const handleMenuItem = (action: string) => {

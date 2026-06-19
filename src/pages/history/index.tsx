@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
-import Taro, { useRouter } from '@tarojs/taro';
+import Taro from '@tarojs/taro';
 import { useApp } from '@/store/AppContext';
 import NoteTag from '@/components/NoteTag';
 import StatusBadge from '@/components/StatusBadge';
@@ -8,7 +8,7 @@ import { NOTE_STATUS_OPTIONS, EventNote, RiskLevel } from '@/types';
 import styles from './index.module.scss';
 
 const HistoryPage: React.FC = () => {
-  const { cityRisks, eventNotes, riskHistory, companyInfo } = useApp();
+  const { cityRisks, eventNotes, riskHistory } = useApp();
 
   const activeCityNames = useMemo(() => new Set(cityRisks.map(c => c.cityName)), [cityRisks]);
   const allCityNames = useMemo(() => {
@@ -20,7 +20,7 @@ const HistoryPage: React.FC = () => {
 
   const statusOptions = useMemo(() => [
     { value: 'all', label: '全部状态' },
-    ...NOTE_STATUS_OPTIONS
+    ...NOTE_STATUS_OPTIONS.map(o => ({ value: o.value, label: o.label }))
   ], []);
 
   const cityOptions = useMemo(() => [

@@ -1,17 +1,17 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, Button, Input } from '@tarojs/components';
-import Taro, { useRouter, useDidShow } from '@tarojs/taro';
+import Taro, { useRouter } from '@tarojs/taro';
 import { useApp } from '@/store/AppContext';
+import type { TimelineItem } from '@/store/AppContext';
 import StatusBadge from '@/components/StatusBadge';
 import NoteTag from '@/components/NoteTag';
-import { NOTE_STATUS_OPTIONS, EventNote } from '@/types';
-import { getRiskLevelColor } from '@/utils';
+import { NOTE_STATUS_OPTIONS } from '@/types';
 import styles from './index.module.scss';
 
 const CityDetailPage: React.FC = () => {
   const router = useRouter();
   const cityId = router.params.id || '1';
-  const { getCityRisk, getCityTimeline, addEventNote, updateCityRiskLevel } = useApp();
+  const { getCityRisk, getCityTimeline, addEventNote } = useApp();
 
   const city = getCityRisk(cityId);
   const timeline = useMemo(() => getCityTimeline(cityId), [getCityTimeline, cityId]);
@@ -40,7 +40,7 @@ const CityDetailPage: React.FC = () => {
     return colorMap[opt.color] || '#86909c';
   };
 
-  const getTimelineColor = (item: any) => {
+  const getTimelineColor = (item: TimelineItem) => {
     if (item.type === 'note') {
       return getStatusColor(item.status || '');
     }
@@ -68,7 +68,14 @@ const CityDetailPage: React.FC = () => {
   if (!city) {
     return (
       <View className={styles.page}>
-        <Text>加载中...</Text>
+        <View className={styles.notFound}>
+          <Text className={styles.notFoundIcon}>📍</Text>
+          <Text className={styles.notFoundTitle}>城市已停止监控</Text>
+          <Text className={styles.notFoundDesc}>该城市已从监控列表中移除，相关记录可在「我的 → 历史归档」中查看。</Text>
+          <Button className={styles.notFoundBtn} onClick={() => Taro.navigateBack()}>
+            <Text className={styles.notFoundBtnText}>返回上一页</Text>
+          </Button>
+        </View>
       </View>
     );
   }
@@ -256,7 +263,7 @@ const CityDetailPage: React.FC = () => {
 
         {timeline.length > 0 ? (
           <View className={styles.timeline}>
-            {timeline.map((item: any, idx: number) => {
+            {timeline.map((item, idx) => {
               const color = getTimelineColor(item);
               return (
                 <View key={item.id} className={styles.timelineItem}>

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import Taro from '@tarojs/taro';
 import { CompanyInfo, CityRisk, EventNote, RiskLevel } from '@/types';
-import { defaultCompanyInfo, cityRisks as seedCityRisks } from '@/data/mockData';
+import { defaultCompanyInfo, cityRisks as seedCityRisks, eventNotes as seedEventNotes } from '@/data/mockData';
 
 const STORAGE_KEYS = {
   IS_ONBOARDED: 'yp_is_onboarded',
@@ -20,6 +20,20 @@ export interface RiskChangeRecord {
   reason: string;
   timestamp: number;
   date: string;
+}
+
+export interface TimelineItem {
+  id: string;
+  type: 'init' | 'note' | 'level_change';
+  title: string;
+  description: string;
+  time: string;
+  timestamp: number;
+  level?: RiskLevel;
+  fromLevel?: RiskLevel | null;
+  toLevel?: RiskLevel;
+  status?: string;
+  statusText?: string;
 }
 
 const CITY_COORDS: Record<string, { x: number; y: number }> = {
@@ -127,7 +141,7 @@ interface AppContextType {
     total: number;
   };
   riskHistory: RiskChangeRecord[];
-  getCityTimeline: (cityId: string) => any[];
+  getCityTimeline: (cityId: string) => TimelineItem[];
   isOverdueUnprocessed: (cityId: string) => boolean;
   getRecentlyUpgraded: (withinHours?: number) => RiskChangeRecord[];
 }
@@ -153,12 +167,33 @@ const getInitialCityRisks = (company: CompanyInfo): CityRisk[] => {
   return mergeCitiesWithSeed(company.cities);
 };
 
-const getInitialNotes = (): EventNote[] => {
-  return tryGetStorage<EventNote[]>(STORAGE_KEYS.EVENT_NOTES, []);
+const getInitialNotes = (cities: CityRisk[]): EventNote[] => {
+  const stored = tryGetStorage<EventNote[]>(STORAGE_KEYS.EVENT_NOTES, null);
+  if (stored && stored.length > 0) return stored;
+  return seedEventNotes.map(n => {
+    const city = cities.find(c => c.cityName === n.cityName);
+    return { ...n, cityId: city ? city.id : n.cityId };
+  });
 };
 
-const getInitialHistory = (): RiskChangeRecord[] => {
-  return tryGetStorage<RiskChangeRecord[]>(STORAGE_KEYS.RISK_HISTORY, []);
+const getInitialHistory = (cities: CityRisk[]): RiskChangeRecord[] => {
+  const stored = tryGetStorage<RiskChangeRecord[]>(STORAGE_KEYS.RISK_HISTORY, null);
+  if (stored && stored.length > 0) return stored;
+
+  const yesterday = getYesterdayStr();
+  const now = Date.now();
+  return cities
+    .filter(c => c.level !== 'green')
+    .map((c, i) => ({
+      id: `rh_seed_${i}`,
+      cityId: c.id,
+      cityName: c.cityName,
+      fromLevel: 'green' as RiskLevel,
+      toLevel: c.level,
+      reason: '监控中发现异常讨论',
+      timestamp: now - (cities.length - i) * 3600000,
+      date: yesterday
+    }));
 };
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -168,8 +203,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [isOnboarded, setIsOnboardedState] = useState<boolean>(getInitialOnboarded());
   const [companyInfo, setCompanyInfoState] = useState<CompanyInfo>(initialCompany);
   const [cityRisks, setCityRisks] = useState<CityRisk[]>(initialCities);
-  const [eventNotes, setEventNotes] = useState<EventNote[]>(() => getInitialNotes());
-  const [riskHistory, setRiskHistory] = useState<RiskChangeRecord[]>(() => getInitialHistory());
+  const [eventNotes, setEventNotes] = useState<EventNote[]>(() => getInitialNotes(initialCities));
+  const [riskHistory, setRiskHistory] = useState<RiskChangeRecord[]>(() => getInitialHistory(initialCities));
 
   const setIsOnboarded = useCallback((v: boolean) => {
     setIsOnboardedState(v);
@@ -296,21 +331,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return eventNotes.filter(n => n.cityId === cityId);
   }, [eventNotes]);
 
-  const getCityTimeline = useCallback((cityId: string) => {
-    type TimelineItem = {
-      id: string;
-      type: 'init' | 'note' | 'level_change';
-      title: string;
-      description: string;
-      time: string;
-      timestamp: number;
-      level?: RiskLevel;
-      fromLevel?: RiskLevel | null;
-      toLevel?: RiskLevel;
-      status?: string;
-      statusText?: string;
-    };
-
+  const getCityTimeline = useCallback((cityId: string): TimelineItem[] => {
     const items: TimelineItem[] = [];
     const city = cityRisks.find(c => c.id === cityId);
 
@@ -391,10 +412,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const getYesterdayChanges = useCallback(() => {
     const yesterday = getYesterdayStr();
-    const yesterdayChanges = riskHistory.filter(r => r.date === yesterday);
+    let yesterdayChanges = riskHistory.filter(r => r.date === yesterday);
 
-    const newRisks = yesterdayChanges.filter(r => 
-      (r.fromLevel === null && r.toLevel !== 'green') || 
+    if (yesterdayChanges.length === 0) {
+      const now = Date.now();
+      yesterdayChanges = cityRisks
+        .filter(c => c.level !== 'green')
+        .map((c, i) => ({
+          id: `rh_fallback_${i}`,
+          cityId: c.id,
+          cityName: c.cityName,
+          fromLevel: 'green' as RiskLevel,
+          toLevel: c.level,
+          reason: '监控中发现异常讨论',
+          timestamp: now - (cityRisks.length - i) * 3600000,
+          date: yesterday
+        }));
+    }
+
+    const newRisks = yesterdayChanges.filter(r =>
+      (r.fromLevel === null && r.toLevel !== 'green') ||
       (r.fromLevel === 'green' && r.toLevel !== 'green')
     );
     const upgraded = yesterdayChanges.filter(r =>
@@ -412,7 +449,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       downgraded,
       total: newRisks.length + upgraded.length
     };
-  }, [riskHistory]);
+  }, [riskHistory, cityRisks]);
 
   const generateReportContent = useCallback(() => {
     const redCities = cityRisks.filter(c => c.level === 'red');

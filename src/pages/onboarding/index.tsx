@@ -51,16 +51,14 @@ const OnboardingPage: React.FC = () => {
       .map(s => s.trim())
       .filter(Boolean);
 
-    setCompanyInfo({
+    const newCompanyInfo = {
       name: companyName.trim(),
       shortNames: names.length > 0 ? names : [companyName.trim()],
       cities: selectedCities
-    });
+    };
 
-    setTimeout(() => {
-      syncCitiesFromCompany();
-    }, 50);
-
+    setCompanyInfo(newCompanyInfo);
+    syncCitiesFromCompany(selectedCities);
     setIsOnboarded(true);
 
     if (isEdit) {

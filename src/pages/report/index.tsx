@@ -2,12 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, Button } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { useApp } from '@/store/AppContext';
-import { getRiskLevelText } from '@/utils';
 import StatusBadge from '@/components/StatusBadge';
 import styles from './index.module.scss';
 
 const ReportPage: React.FC = () => {
-  const { companyInfo, cityRisks, generateReportContent, eventNotes } = useApp();
+  const { companyInfo, cityRisks, generateReportContent, getYesterdayChanges } = useApp();
   const [showPreview, setShowPreview] = useState(false);
 
   const stats = useMemo(() => {
@@ -17,24 +16,15 @@ const ReportPage: React.FC = () => {
     return { red, yellow, green, total: cityRisks.length };
   }, [cityRisks]);
 
-  const riskChanges = useMemo(() => {
-    const changes: Array<{ city: string; level: string; type: 'up' | 'down' }> = [];
-    cityRisks.forEach(c => {
-      if (c.level === 'red') {
-        changes.push({ city: c.cityName, level: c.level, type: 'up' });
-      } else if (c.level === 'yellow') {
-        changes.push({ city: c.cityName, level: c.level, type: 'up' });
-      }
-    });
-    return changes.slice(0, 6);
-  }, [cityRisks]);
+  const yesterdayChanges = useMemo(() => getYesterdayChanges(), [getYesterdayChanges]);
+
+  const newRiskCount = yesterdayChanges.total;
 
   const negativeKeywords = useMemo(() => {
     const baseKeywords = ['过期食品', '价格欺诈', '配送延迟', '服务态度', '促销秩序'];
-    if (stats.red >= 2) return baseKeywords.slice(0, 5);
-    if (stats.red === 1) return baseKeywords.slice(0, 4);
-    return baseKeywords.slice(0, 3);
-  }, [stats.red]);
+    const count = Math.min(5, Math.max(2, stats.red + stats.yellow));
+    return baseKeywords.slice(0, count);
+  }, [stats.red, stats.yellow]);
 
   const mostActivePlatforms = useMemo(() => {
     const total = stats.red * 2 + stats.yellow;
@@ -95,9 +85,12 @@ const ReportPage: React.FC = () => {
 
       <View className={styles.highlightCard}>
         <Text className={styles.highlightLabel}>昨日新增风险点</Text>
-        <Text className={styles.highlightNumber}>{stats.red + stats.yellow}</Text>
+        <Text className={styles.highlightNumber}>{newRiskCount}</Text>
         <Text className={styles.highlightDesc}>
-          {stats.red > 0 ? `其中 ${stats.red} 个城市需紧急处理` : '持续关注中，暂无紧急风险'}
+          {newRiskCount > 0
+            ? `新增 ${yesterdayChanges.newRisks.length} 个，升级 ${yesterdayChanges.upgraded.length} 个`
+            : '昨日无新增风险，整体平稳'
+          }
         </Text>
       </View>
 
@@ -114,6 +107,48 @@ const ReportPage: React.FC = () => {
           <Text className={styles.quickStatNumber} style={{ color: '#00b42a' }}>{stats.green}</Text>
           <Text className={styles.quickStatLabel} style={{ color: '#00b42a' }}>运行平稳</Text>
         </View>
+      </View>
+
+      <View className={styles.changeCard}>
+        <View className={styles.changeHeader}>
+          <Text className={styles.changeTitle}>昨日变动</Text>
+        </View>
+        <View className={styles.changeStats}>
+          <View className={styles.changeStatItem}>
+            <Text className={styles.changeStatUp}>↑</Text>
+            <View>
+              <Text className={styles.changeStatNum} style={{ color: '#f53f3f' }}>{yesterdayChanges.newRisks.length}</Text>
+              <Text className={styles.changeStatLabel}>新增风险</Text>
+            </View>
+          </View>
+          <View className={styles.changeStatItem}>
+            <Text className={styles.changeStatUp}>⬆</Text>
+            <View>
+              <Text className={styles.changeStatNum} style={{ color: '#ff7d00' }}>{yesterdayChanges.upgraded.length}</Text>
+              <Text className={styles.changeStatLabel}>等级升级</Text>
+            </View>
+          </View>
+          <View className={styles.changeStatItem}>
+            <Text className={styles.changeStatDown}>↓</Text>
+            <View>
+              <Text className={styles.changeStatNum} style={{ color: '#00b42a' }}>{yesterdayChanges.downgraded.length}</Text>
+              <Text className={styles.changeStatLabel}>风险下降</Text>
+            </View>
+          </View>
+        </View>
+        {yesterdayChanges.newRisks.length > 0 && (
+          <View className={styles.changeList}>
+            {yesterdayChanges.newRisks.map(change => (
+              <View key={change.id} className={styles.changeItem}>
+                <Text className={styles.changeCity}>{change.cityName}</Text>
+                <View style={{ display: 'flex', alignItems: 'center', gap: '16rpx' }}>
+                  <Text className={styles.changeReason}>{change.reason}</Text>
+                  <StatusBadge level={change.toLevel} size="sm" />
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
       </View>
 
       <View className={styles.sectionCard}>
@@ -197,7 +232,7 @@ const ReportPage: React.FC = () => {
         <View className={styles.shareOptions}>
           <View className={styles.shareOption} onClick={() => {
             Taro.setClipboardData({ data: previewContent });
-            Taro.showToast({ title: '已复制', icon: 'success' });
+            Taro.showToast({ title: '已复制给店长', icon: 'success' });
           }}>
             <View className={styles.shareOptionIcon} style={{ backgroundColor: 'rgba(22, 93, 255, 0.1)' }}>
               <Text style={{ color: '#165dff', fontSize: '28rpx', fontWeight: 600 }}>店</Text>
@@ -206,7 +241,7 @@ const ReportPage: React.FC = () => {
           </View>
           <View className={styles.shareOption} onClick={() => {
             Taro.setClipboardData({ data: previewContent });
-            Taro.showToast({ title: '已复制', icon: 'success' });
+            Taro.showToast({ title: '已复制给法务', icon: 'success' });
           }}>
             <View className={styles.shareOptionIcon} style={{ backgroundColor: 'rgba(245, 63, 63, 0.1)' }}>
               <Text style={{ color: '#f53f3f', fontSize: '28rpx', fontWeight: 600 }}>法</Text>
@@ -215,7 +250,7 @@ const ReportPage: React.FC = () => {
           </View>
           <View className={styles.shareOption} onClick={() => {
             Taro.setClipboardData({ data: previewContent });
-            Taro.showToast({ title: '已复制', icon: 'success' });
+            Taro.showToast({ title: '已复制给客服', icon: 'success' });
           }}>
             <View className={styles.shareOptionIcon} style={{ backgroundColor: 'rgba(0, 180, 42, 0.1)' }}>
               <Text style={{ color: '#00b42a', fontSize: '28rpx', fontWeight: 600 }}>客</Text>

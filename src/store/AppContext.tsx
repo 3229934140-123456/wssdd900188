@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import Taro from '@tarojs/taro';
 import { CompanyInfo, CityRisk, EventNote, RiskLevel } from '@/types';
 import { defaultCompanyInfo, cityRisks as seedCityRisks } from '@/data/mockData';
@@ -7,8 +7,20 @@ const STORAGE_KEYS = {
   IS_ONBOARDED: 'yp_is_onboarded',
   COMPANY_INFO: 'yp_company_info',
   CITY_RISKS: 'yp_city_risks',
-  EVENT_NOTES: 'yp_event_notes'
+  EVENT_NOTES: 'yp_event_notes',
+  RISK_HISTORY: 'yp_risk_history'
 };
+
+export interface RiskChangeRecord {
+  id: string;
+  cityId: string;
+  cityName: string;
+  fromLevel: RiskLevel | null;
+  toLevel: RiskLevel;
+  reason: string;
+  timestamp: number;
+  date: string;
+}
 
 const CITY_COORDS: Record<string, { x: number; y: number }> = {
   '北京': { x: 68, y: 22 },
@@ -31,6 +43,17 @@ const CITY_COORDS: Record<string, { x: number; y: number }> = {
   '厦门': { x: 66, y: 78 },
   '福州': { x: 68, y: 74 },
   '合肥': { x: 64, y: 54 }
+};
+
+const getTodayStr = (): string => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+const getYesterdayStr = (): string => {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
 const generateCityId = (cityName: string): string => {
@@ -65,6 +88,24 @@ const mergeCitiesWithSeed = (cities: string[]): CityRisk[] => {
   });
 };
 
+const tryGetStorage = <T,>(key: string, fallback: T): T => {
+  try {
+    const val = Taro.getStorageSync(key);
+    if (val !== '' && val !== null && val !== undefined) {
+      return val as T;
+    }
+  } catch {}
+  return fallback;
+};
+
+const trySetStorage = (key: string, value: any): void => {
+  try {
+    Taro.setStorageSync(key, value);
+  } catch (e) {
+    console.error('[AppContext] 存储失败', key, e);
+  }
+};
+
 interface AppContextType {
   isOnboarded: boolean;
   setIsOnboarded: (v: boolean) => void;
@@ -73,166 +114,157 @@ interface AppContextType {
   cityRisks: CityRisk[];
   getCityRisk: (id: string) => CityRisk | undefined;
   updateCityRiskLevel: (cityId: string, level: RiskLevel, reason?: string) => void;
-  syncCitiesFromCompany: () => void;
+  syncCitiesFromCompany: (newCities?: string[]) => void;
   eventNotes: EventNote[];
-  addEventNote: (note: Omit<EventNote, 'id' | 'createdAt'>) => void;
+  addEventNote: (note: Omit<EventNote, 'id' | 'createdAt'>) => EventNote;
   getNotesByCity: (cityId: string) => EventNote[];
   cityCoords: Record<string, { x: number; y: number }>;
   generateReportContent: () => string;
+  getYesterdayChanges: () => {
+    newRisks: RiskChangeRecord[];
+    upgraded: RiskChangeRecord[];
+    downgraded: RiskChangeRecord[];
+    total: number;
+  };
+  riskHistory: RiskChangeRecord[];
 }
 
 const AppContext = createContext<AppContextType | null>(null);
 
 const getInitialOnboarded = (): boolean => {
-  try {
-    const val = Taro.getStorageSync(STORAGE_KEYS.IS_ONBOARDED);
-    return val === true || val === 'true';
-  } catch {
-    return false;
-  }
+  return tryGetStorage<boolean>(STORAGE_KEYS.IS_ONBOARDED, false);
 };
 
 const getInitialCompanyInfo = (): CompanyInfo => {
-  try {
-    const val = Taro.getStorageSync(STORAGE_KEYS.COMPANY_INFO);
-    if (val && typeof val === 'object') return val;
-  } catch {}
-  return defaultCompanyInfo;
+  return tryGetStorage<CompanyInfo>(STORAGE_KEYS.COMPANY_INFO, defaultCompanyInfo);
 };
 
 const getInitialCityRisks = (company: CompanyInfo): CityRisk[] => {
-  try {
-    const val = Taro.getStorageSync(STORAGE_KEYS.CITY_RISKS);
-    if (val && Array.isArray(val) && val.length > 0) return val;
-  } catch {}
+  const stored = tryGetStorage<CityRisk[] | null>(STORAGE_KEYS.CITY_RISKS, null);
+  if (stored && stored.length > 0) {
+    const validCities = stored.filter(c => company.cities.includes(c.cityName));
+    const newCities = company.cities.filter(city => !stored.find(s => s.cityName === city));
+    const created = newCities.map(city => createDefaultCityRisk(city));
+    return [...validCities, ...created];
+  }
   return mergeCitiesWithSeed(company.cities);
 };
 
 const getInitialNotes = (): EventNote[] => {
-  try {
-    const val = Taro.getStorageSync(STORAGE_KEYS.EVENT_NOTES);
-    if (val && Array.isArray(val)) return val;
-  } catch {}
-  return [];
+  return tryGetStorage<EventNote[]>(STORAGE_KEYS.EVENT_NOTES, []);
+};
+
+const getInitialHistory = (): RiskChangeRecord[] => {
+  return tryGetStorage<RiskChangeRecord[]>(STORAGE_KEYS.RISK_HISTORY, []);
 };
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const initialCompany = getInitialCompanyInfo();
+  const initialCities = getInitialCityRisks(initialCompany);
+
   const [isOnboarded, setIsOnboardedState] = useState<boolean>(getInitialOnboarded());
   const [companyInfo, setCompanyInfoState] = useState<CompanyInfo>(initialCompany);
-  const [cityRisks, setCityRisks] = useState<CityRisk[]>(() => getInitialCityRisks(initialCompany));
+  const [cityRisks, setCityRisks] = useState<CityRisk[]>(initialCities);
   const [eventNotes, setEventNotes] = useState<EventNote[]>(() => getInitialNotes());
-
-  useEffect(() => {
-    try {
-      const storedOnboarded = Taro.getStorageSync(STORAGE_KEYS.IS_ONBOARDED);
-      const storedCompany = Taro.getStorageSync(STORAGE_KEYS.COMPANY_INFO);
-      const storedCities = Taro.getStorageSync(STORAGE_KEYS.CITY_RISKS);
-      const storedNotes = Taro.getStorageSync(STORAGE_KEYS.EVENT_NOTES);
-
-      if (storedOnboarded === true || storedOnboarded === 'true') {
-        setIsOnboardedState(true);
-      }
-
-      if (storedCompany && typeof storedCompany === 'object') {
-        setCompanyInfoState(storedCompany);
-        if (storedCities && Array.isArray(storedCities) && storedCities.length > 0) {
-          setCityRisks(storedCities);
-        } else {
-          setCityRisks(mergeCitiesWithSeed(storedCompany.cities || defaultCompanyInfo.cities));
-        }
-      } else {
-        setCityRisks(mergeCitiesWithSeed(defaultCompanyInfo.cities));
-      }
-
-      if (storedNotes && Array.isArray(storedNotes)) {
-        setEventNotes(storedNotes);
-      }
-
-      console.log('[AppContext] 本地数据加载完成', {
-        isOnboarded: storedOnboarded,
-        cities: storedCities?.length || 0,
-        notes: storedNotes?.length || 0
-      });
-    } catch (e) {
-      console.error('[AppContext] 读取本地存储失败', e);
-      setCityRisks(mergeCitiesWithSeed(defaultCompanyInfo.cities));
-    }
-  }, []);
+  const [riskHistory, setRiskHistory] = useState<RiskChangeRecord[]>(() => getInitialHistory());
 
   const setIsOnboarded = useCallback((v: boolean) => {
     setIsOnboardedState(v);
-    try { Taro.setStorageSync(STORAGE_KEYS.IS_ONBOARDED, v); } catch (e) {
-      console.error('[AppContext] 保存isOnboarded失败', e);
-    }
+    trySetStorage(STORAGE_KEYS.IS_ONBOARDED, v);
   }, []);
 
   const setCompanyInfo = useCallback((info: CompanyInfo) => {
     setCompanyInfoState(info);
-    try { Taro.setStorageSync(STORAGE_KEYS.COMPANY_INFO, info); } catch (e) {
-      console.error('[AppContext] 保存companyInfo失败', e);
-    }
+    trySetStorage(STORAGE_KEYS.COMPANY_INFO, info);
   }, []);
 
-  const persistCityRisks = useCallback((risks: CityRisk[]) => {
-    try { Taro.setStorageSync(STORAGE_KEYS.CITY_RISKS, risks); } catch (e) {
-      console.error('[AppContext] 保存cityRisks失败', e);
-    }
+  const addHistoryRecord = useCallback((
+    cityId: string,
+    cityName: string,
+    fromLevel: RiskLevel | null,
+    toLevel: RiskLevel,
+    reason: string
+  ) => {
+    const record: RiskChangeRecord = {
+      id: 'rh_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+      cityId,
+      cityName,
+      fromLevel,
+      toLevel,
+      reason,
+      timestamp: Date.now(),
+      date: getTodayStr()
+    };
+    setRiskHistory(prev => {
+      const updated = [record, ...prev].slice(0, 200);
+      trySetStorage(STORAGE_KEYS.RISK_HISTORY, updated);
+      return updated;
+    });
+    return record;
   }, []);
 
-  const persistEventNotes = useCallback((notes: EventNote[]) => {
-    try { Taro.setStorageSync(STORAGE_KEYS.EVENT_NOTES, notes); } catch (e) {
-      console.error('[AppContext] 保存eventNotes失败', e);
-    }
-  }, []);
-
-  const getCityRisk = useCallback((id: string) => {
-    return cityRisks.find(c => c.id === id);
-  }, [cityRisks]);
-
-  const updateCityRiskLevel = useCallback((cityId: string, level: RiskLevel, reason?: string) => {
+  const updateCityRiskLevel = useCallback((cityId: string, level: RiskLevel, reason: string = '') => {
     setCityRisks(prev => {
+      const targetCity = prev.find(c => c.id === cityId);
+      if (!targetCity) return prev;
+      if (targetCity.level === level) return prev;
+
+      addHistoryRecord(cityId, targetCity.cityName, targetCity.level, level, reason);
+
+      const newCount = level === 'green'
+        ? Math.floor(Math.random() * 5) + 1
+        : level === 'yellow'
+          ? Math.floor(Math.random() * 50) + 30
+          : Math.floor(Math.random() * 200) + 100;
+
       const updated = prev.map(c => {
         if (c.id === cityId) {
-          const newCount = level === 'green' 
-            ? Math.floor(Math.random() * 5) + 1 
-            : level === 'yellow' 
-              ? Math.floor(Math.random() * 50) + 30 
-              : Math.floor(Math.random() * 200) + 100;
-          return { 
-            ...c, 
-            level, 
+          return {
+            ...c,
+            level,
             discussionCount: newCount,
             lastUpdated: new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-')
           };
         }
         return c;
       });
-      persistCityRisks(updated);
+      trySetStorage(STORAGE_KEYS.CITY_RISKS, updated);
       return updated;
     });
-    console.log(`[AppContext] 城市${cityId}风险等级更新为${level}`, reason || '');
-  }, [persistCityRisks]);
+  }, [addHistoryRecord]);
 
-  const syncCitiesFromCompany = useCallback(() => {
-    setCompanyInfoState(currentCompany => {
-      setCityRisks(prevRisks => {
-        const existingMap = new Map(prevRisks.map(c => [c.cityName, c]));
-        const newRisks = currentCompany.cities.map(cityName => {
-          if (existingMap.has(cityName)) {
-            return existingMap.get(cityName)!;
-          }
-          return createDefaultCityRisk(cityName);
-        });
-        persistCityRisks(newRisks);
-        console.log('[AppContext] 城市列表同步完成，共', newRisks.length, '个城市');
-        return newRisks;
+  const syncCitiesFromCompany = useCallback((newCities?: string[]) => {
+    const citiesToSync = newCities || companyInfo.cities;
+
+    setCityRisks(prevRisks => {
+      const existingMap = new Map(prevRisks.map(c => [c.cityName, c]));
+      const result: CityRisk[] = [];
+
+      citiesToSync.forEach(cityName => {
+        if (existingMap.has(cityName)) {
+          result.push(existingMap.get(cityName)!);
+        } else {
+          const newCity = createDefaultCityRisk(cityName);
+          result.push(newCity);
+          addHistoryRecord(newCity.id, cityName, null, 'green', '新增监控城市');
+        }
       });
-      return currentCompany;
-    });
-  }, [persistCityRisks]);
 
-  const addEventNote = useCallback((note: Omit<EventNote, 'id' | 'createdAt'>) => {
+      const removedCities = prevRisks.filter(c => !citiesToSync.includes(c.cityName));
+      if (removedCities.length > 0) {
+        console.log('[AppContext] 移除城市:', removedCities.map(c => c.cityName).join(', '));
+      }
+
+      trySetStorage(STORAGE_KEYS.CITY_RISKS, result);
+      return result;
+    });
+  }, [companyInfo.cities, addHistoryRecord]);
+
+  const getCityRisk = useCallback((id: string) => {
+    return cityRisks.find(c => c.id === id);
+  }, [cityRisks]);
+
+  const addEventNote = useCallback((note: Omit<EventNote, 'id' | 'createdAt'>): EventNote => {
     const newNote: EventNote = {
       ...note,
       id: 'n' + Date.now(),
@@ -241,44 +273,56 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     setEventNotes(prev => {
       const updated = [newNote, ...prev];
-      persistEventNotes(updated);
+      trySetStorage(STORAGE_KEYS.EVENT_NOTES, updated);
       return updated;
     });
 
     if (note.status === 'resolved' || note.status === 'rumor' || note.status === 'issued_statement') {
-      setTimeout(() => {
-        updateCityRiskLevel(note.cityId, 'green', `备注：${note.statusText}`);
-      }, 300);
+      updateCityRiskLevel(note.cityId, 'green', `备注：${note.statusText}`);
     } else if (note.status === 'monitoring') {
-      setTimeout(() => {
-        setCityRisks(prev => {
-          const city = prev.find(c => c.id === note.cityId);
-          if (city && city.level === 'red') {
-            const updated = prev.map(c => 
-              c.id === note.cityId 
-                ? { ...c, level: 'yellow' as RiskLevel, lastUpdated: new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-') }
-                : c
-            );
-            persistCityRisks(updated);
-            return updated;
-          }
-          return prev;
-        });
-      }, 300);
+      const city = cityRisks.find(c => c.id === note.cityId);
+      if (city && city.level === 'red') {
+        updateCityRiskLevel(note.cityId, 'yellow', `备注：${note.statusText}`);
+      }
     }
 
-    console.log('[AppContext] 新增备注', newNote);
     return newNote;
-  }, [updateCityRiskLevel, persistCityRisks, persistEventNotes]);
+  }, [updateCityRiskLevel, cityRisks]);
 
   const getNotesByCity = useCallback((cityId: string) => {
     return eventNotes.filter(n => n.cityId === cityId);
   }, [eventNotes]);
 
+  const getYesterdayChanges = useCallback(() => {
+    const yesterday = getYesterdayStr();
+    const yesterdayChanges = riskHistory.filter(r => r.date === yesterday);
+
+    const newRisks = yesterdayChanges.filter(r => 
+      (r.fromLevel === null && r.toLevel !== 'green') || 
+      (r.fromLevel === 'green' && r.toLevel !== 'green')
+    );
+    const upgraded = yesterdayChanges.filter(r =>
+      (r.fromLevel === 'yellow' && r.toLevel === 'red')
+    );
+    const downgraded = yesterdayChanges.filter(r =>
+      (r.fromLevel === 'red' && r.toLevel === 'yellow') ||
+      (r.fromLevel === 'red' && r.toLevel === 'green') ||
+      (r.fromLevel === 'yellow' && r.toLevel === 'green')
+    );
+
+    return {
+      newRisks,
+      upgraded,
+      downgraded,
+      total: newRisks.length + upgraded.length
+    };
+  }, [riskHistory]);
+
   const generateReportContent = useCallback(() => {
     const redCities = cityRisks.filter(c => c.level === 'red');
     const yellowCities = cityRisks.filter(c => c.level === 'yellow');
     const greenCities = cityRisks.filter(c => c.level === 'green');
+    const changes = getYesterdayChanges();
 
     const topKeywords = ['过期食品', '价格欺诈', '配送延迟', '服务态度', '促销秩序'];
     const topPlatforms = [
@@ -289,24 +333,34 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const actionItems: string[] = [];
     if (redCities.length > 0) {
-      actionItems.push(`【紧急】${redCities.map(c => c.cityName).join('、')}需立即处理，建议法务介入`);
+      actionItems.push(`【紧急处理】${redCities.map(c => c.cityName).join('、')} - 建议法务介入`);
     }
     if (yellowCities.length > 0) {
-      actionItems.push(`【关注】${yellowCities.map(c => c.cityName).join('、')}请店长持续观察`);
+      actionItems.push(`【持续观察】${yellowCities.map(c => c.cityName).join('、')} - 请店长关注`);
+    }
+    if (changes.downgraded.length > 0) {
+      actionItems.push(`【已好转】${changes.downgraded.map(c => c.cityName).join('、')} - 风险下降中`);
     }
     if (greenCities.length > 0) {
-      actionItems.push(`【平稳】${greenCities.length}个城市运营正常`);
+      actionItems.push(`【平稳运行】${greenCities.length}个城市运营正常`);
     }
 
     const today = new Date().toLocaleDateString('zh-CN').replace(/\//g, '-');
+    const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    const weekDay = weekDays[new Date().getDay()];
 
     return `【${companyInfo.name}·每日舆情早报】
-日期：${today}
+日期：${today} ${weekDay}
 
 ━━━━ 风险概览 ━━━━
 🔴 需马上处理：${redCities.length} 个城市
 🟡 持续关注中：${yellowCities.length} 个城市
 🟢 运行平稳：${greenCities.length} 个城市
+
+━━━━ 昨日变动 ━━━━
+📈 新增风险：${changes.newRisks.length} 个
+⬆️ 等级升级：${changes.upgraded.length} 个
+📉 风险下降：${changes.downgraded.length} 个
 
 ━━━━ 重点关注城市 ━━━━
 ${[...redCities, ...yellowCities].slice(0, 5).map((c, i) => `${i + 1}. ${c.cityName}（${c.level === 'red' ? '红色预警' : '黄色关注'}）
@@ -322,7 +376,7 @@ ${topPlatforms.map((p, i) => `${i + 1}. ${p.platform} - ${p.count}条讨论`).jo
 ${actionItems.map((a, i) => `${i + 1}. ${a}`).join('\n')}
 
 —— 由舆情预警助手自动生成`;
-  }, [cityRisks, companyInfo]);
+  }, [cityRisks, companyInfo, getYesterdayChanges]);
 
   return (
     <AppContext.Provider value={{
@@ -338,7 +392,9 @@ ${actionItems.map((a, i) => `${i + 1}. ${a}`).join('\n')}
       addEventNote,
       getNotesByCity,
       cityCoords: CITY_COORDS,
-      generateReportContent
+      generateReportContent,
+      getYesterdayChanges,
+      riskHistory
     }}>
       {children}
     </AppContext.Provider>
